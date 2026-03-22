@@ -23,6 +23,7 @@ function LoginForm() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [isAdminLogin, setIsAdminLogin] = useState(false)
+  const [isSubdomainLogin, setIsSubdomainLogin] = useState(false)
 
   useEffect(() => {
     // Redirect if already logged in
@@ -48,6 +49,7 @@ function LoginForm() {
           )
           if (company) {
             setSelectedCompany(company)
+            setIsSubdomainLogin(true)
           }
         }
       } catch (error) {
@@ -78,6 +80,88 @@ function LoginForm() {
     }
   }
 
+  // Company-specific subdomain login (e.g., quickreply.brtr.club)
+  if (isSubdomainLogin && selectedCompany) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Company Branded Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-2xl font-semibold font-[family-name:var(--font-brand)] brand-text">
+                .brtr
+              </span>
+              <span className="text-[var(--text-4)]">x</span>
+              {selectedCompany.logoUrl ? (
+                <img
+                  src={selectedCompany.logoUrl}
+                  alt={selectedCompany.name}
+                  className="h-8"
+                />
+              ) : (
+                <span className="text-xl font-semibold text-[var(--text-1)]">
+                  {selectedCompany.name}
+                </span>
+              )}
+            </div>
+            <p className="text-[var(--text-3)]">
+              Sign in to your mentorship dashboard
+            </p>
+          </div>
+
+          <Card>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="mt-1"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
+                    {error}
+                  </p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <p className="text-center text-xs text-[var(--text-4)] mt-6">
+            Powered by{" "}
+            <a href="https://brtr.club" className="text-[var(--copper)] hover:underline">
+              brtr.club
+            </a>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Main login page (brtr.club/login)
   return (
     <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -88,11 +172,9 @@ function LoginForm() {
               .brtr
             </span>
           </Link>
-          {selectedCompany && (
-            <p className="text-[var(--text-3)] mt-2">
-              Signing in to {selectedCompany.name}
-            </p>
-          )}
+          <p className="text-[var(--text-3)] mt-2">
+            Mentorship for revenue teams
+          </p>
         </div>
 
         <Card>
@@ -189,16 +271,6 @@ function LoginForm() {
             )}
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 text-center text-sm text-[var(--text-3)]">
-          <p className="font-medium mb-2">Demo Credentials:</p>
-          <div className="space-y-1 text-xs">
-            <p>Super Admin: <code className="bg-[var(--bg-elevated)] px-1 rounded">admin</code> / <code className="bg-[var(--bg-elevated)] px-1 rounded">brtr2024</code></p>
-            <p>QuickReply Admin: <code className="bg-[var(--bg-elevated)] px-1 rounded">quickreply-admin</code> / <code className="bg-[var(--bg-elevated)] px-1 rounded">qr2024</code></p>
-            <p>User: <code className="bg-[var(--bg-elevated)] px-1 rounded">anirudh</code> / <code className="bg-[var(--bg-elevated)] px-1 rounded">anirudh123</code></p>
-          </div>
-        </div>
       </div>
     </div>
   )
