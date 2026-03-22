@@ -1,26 +1,276 @@
 @import "tailwindcss";
 
+/*
+ * .brtr - Design System
+ * Adapted from brtr-homepage design tokens
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Page backgrounds ── */
+  --bg: #ece7df;
+  --bg-elevated: #f7f4ee;
+  --bg-white: #ffffff;
+  --bg-view: #fafaf8;
+
+  /* ── Text scale (1 = darkest, 4 = lightest) ── */
+  --text-1: #1a1816;
+  --text-2: #5c5650;
+  --text-3: #8a8279;
+  --text-4: #b5b0a8;
+
+  /* ── Borders ── */
+  --border-1: #d8d3cb;
+  --border-transparent: rgba(0, 0, 0, 0.06);
+
+  /* ── Gold palette ── */
+  --gold: #b8922e;
+  --gold-text: #8a6a18;
+  --gold-dark: #a08020;
+  --gold-bg: rgba(184, 146, 46, 0.12);
+  --gold-bg-light: rgba(184, 146, 46, 0.08);
+  --gold-bg-strong: rgba(184, 146, 46, 0.15);
+  --gold-border: rgba(184, 146, 46, 0.18);
+  --gold-border-strong: rgba(184, 146, 46, 0.25);
+  --gold-glow: rgba(184, 146, 46, 0.06);
+
+  /* ── Copper palette ── */
+  --copper: #a06830;
+  --copper-text: #8a5a20;
+  --copper-bg: rgba(160, 104, 48, 0.12);
+  --copper-bg-light: rgba(160, 104, 48, 0.06);
+  --copper-bg-strong: rgba(160, 104, 48, 0.15);
+  --copper-border: rgba(160, 104, 48, 0.15);
+  --copper-glow: rgba(160, 104, 48, 0.06);
+
+  /* ── Silver palette ── */
+  --silver: #7a7a80;
+  --silver-text: #626268;
+  --silver-bg: rgba(122, 122, 128, 0.1);
+  --silver-bg-strong: rgba(122, 122, 128, 0.12);
+
+  /* ── Status colors ── */
+  --status-online: #34a853;
+  --status-busy: #e8a520;
+  --status-offline: #c4bfb7;
+
+  /* ── CTA button (copper gradient) ── */
+  --cta-gradient: linear-gradient(
+    135deg,
+    #c08050 0%,
+    #9a5e28 25%,
+    #d09868 50%,
+    #7e4e18 75%,
+    #a87038 100%
+  );
+  --cta-border: rgba(184, 115, 51, 0.25);
+  --cta-shadow: 0 2px 12px rgba(160, 104, 40, 0.25);
+  --cta-shadow-hover: 0 4px 20px rgba(160, 104, 40, 0.35);
+  --cta-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  /* ── Highlight box ── */
+  --highlight-bg: linear-gradient(
+    135deg,
+    rgba(184, 146, 46, 0.1) 0%,
+    rgba(160, 104, 48, 0.07) 100%
+  );
+  --highlight-border: rgba(184, 146, 46, 0.18);
+  --highlight-shadow: 0 0 20px rgba(184, 146, 46, 0.06);
+
+  /* ── Sidebar ── */
+  --sidebar-bg: linear-gradient(180deg, #f5f1ea 0%, #f0ece5 100%);
+
+  /* ── Frame elements ── */
+  --frame-shadow: 0 4px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* ── Brand logo gradient ── */
+  --logo-gradient: linear-gradient(
+    135deg,
+    #c08050 0%,
+    #9a5e28 30%,
+    #d09868 55%,
+    #7e4e18 80%,
+    #a87038 100%
+  );
+
+  /* ── Layout ── */
+  --sidebar-width: 240px;
+  --header-height: 64px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Backgrounds */
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-white: var(--bg-white);
+  --color-bg-view: var(--bg-view);
+
+  /* Text */
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+
+  /* Borders */
+  --color-border-1: var(--border-1);
+  --color-border-transparent: var(--border-transparent);
+
+  /* Accents */
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
+  --color-copper: var(--copper);
+  --color-copper-text: var(--copper-text);
+  --color-silver: var(--silver);
+  --color-silver-text: var(--silver-text);
+
+  /* Status */
+  --color-status-online: var(--status-online);
+  --color-status-busy: var(--status-busy);
+  --color-status-offline: var(--status-offline);
+
+  /* Fonts */
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont,
+    "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-heading: "League Spartan", sans-serif;
+  --font-brand: "Instrument Serif", Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base styles */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Brand wordmark */
+.brand-text {
+  font-family: var(--font-brand);
+  background: var(--logo-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA Button */
+.btn-cta {
+  background: var(--cta-gradient);
+  border: 1px solid var(--cta-border);
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  text-shadow: var(--cta-text-shadow);
+  box-shadow: var(--cta-shadow);
+  transition: all 0.2s ease;
+}
+
+.btn-cta:hover {
+  box-shadow: var(--cta-shadow-hover);
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* Highlight box */
+.highlight-box {
+  background: var(--highlight-bg);
+  border: 1px solid var(--highlight-border);
+  box-shadow: var(--highlight-shadow);
+  border-radius: 8px;
+}
+
+/* Avatar colors */
+.avatar-amber {
+  background: linear-gradient(135deg, #d4a84b 0%, #b8922e 100%);
+  color: white;
+}
+
+.avatar-copper {
+  background: linear-gradient(135deg, #c08050 0%, #a06830 100%);
+  color: white;
+}
+
+.avatar-silver {
+  background: linear-gradient(135deg, #9a9aa0 0%, #7a7a80 100%);
+  color: white;
+}
+
+/* Status indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-online {
+  background: var(--status-online);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-busy {
+  background: var(--status-busy);
+}
+
+.status-offline {
+  background: var(--status-offline);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(52, 168, 83, 0);
+  }
+}
+
+/* Card styles */
+.card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Sidebar gradient */
+.sidebar {
+  background: var(--sidebar-bg);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-elevated);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-4);
 }

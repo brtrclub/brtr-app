@@ -1,0 +1,506 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== CORE ENTITIES ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  avatar        String?
+  avatarColor   AvatarColor @default(AMBER)
+  emailVerified DateTime?
+  role          UserRole  @default(TEAM_MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  teamMemberships  TeamMember[]
+  mentorAssignments MentorAssignment[] @relation("AssignedTo")
+  bookings         SessionBooking[]   @relation("BookedBy")
+  attendances      SessionAttendance[]
+  amaMessages      AMAMessage[]
+  learningPaths    LearningPath[]
+  progressRecords  ProgressTracking[]
+  createdInsights  CoachingInsight[]  @relation("InsightAuthor")
+  receivedInsights CoachingInsight[]  @relation("InsightRecipient")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  TEAM_LEAD
+  TEAM_MEMBER
+}
+
+enum AvatarColor {
+  AMBER
+  COPPER
+  SILVER
+}
+
+// ==================== ORGANIZATION & TEAMS ====================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  domain      String?
+  industry    String?
+  size        OrgSize?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teams       Team[]
+  subscription Subscription?
+}
+
+enum OrgSize {
+  STARTUP
+  SMALL
+  MEDIUM
+  ENTERPRISE
+}
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  slug           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  members        TeamMember[]
+  groupSessions  GroupSession[]
+  learningPaths  LearningPath[]
+  analyticsData  TeamAnalytics[]
+
+  @@unique([organizationId, slug])
+}
+
+model TeamMember {
+  id        String     @id @default(cuid())
+  role      TeamRole   @default(MEMBER)
+  joinedAt  DateTime   @default(now())
+
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  mentorAssignments MentorAssignment[]
+
+  @@unique([teamId, userId])
+}
+
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+// ==================== MENTORS ====================
+
+model Mentor {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  avatar       String?
+  avatarColor  AvatarColor @default(AMBER)
+  bio          String?  @db.Text
+  headline     String?
+  company      String?
+  linkedIn     String?
+  twitter      String?
+  expertise    String[] @default([])
+  rating       Decimal  @default(0) @db.Decimal(3, 2)
+  sessionCount Int      @default(0)
+  hourlyRate   Decimal? @db.Decimal(10, 2)
+  timezone     String   @default("UTC")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  availability MentorAvailability[]
+  assignments  MentorAssignment[]
+  sessions     SessionBooking[]     @relation("MentorSessions")
+  groupSessions GroupSession[]
+  amaThreads   AMAThread[]
+}
+
+model MentorAvailability {
+  id          String   @id @default(cuid())
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  isAvailable Boolean  @default(true)
+
+  mentor      Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId    String
+
+  @@index([mentorId])
+}
+
+model MentorAssignment {
+  id           String   @id @default(cuid())
+  status       AssignmentStatus @default(ACTIVE)
+  assignedAt   DateTime @default(now())
+  notes        String?  @db.Text
+
+  mentor       Mentor     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId     String
+  teamMember   TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  teamMemberId String
+  assignedBy   User       @relation("AssignedTo", fields: [assignedById], references: [id])
+  assignedById String
+
+  @@unique([mentorId, teamMemberId])
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+// ==================== SESSIONS ====================
+
+model SessionBooking {
+  id              String        @id @default(cuid())
+  type            SessionType   @default(ONE_ON_ONE)
+  title           String?
+  description     String?       @db.Text
+  scheduledAt     DateTime
+  duration        Int           @default(30)
+  status          SessionStatus @default(SCHEDULED)
+  meetingLink     String?
+  notes           String?       @db.Text
+  feedback        String?       @db.Text
+  rating          Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  mentor          Mentor        @relation("MentorSessions", fields: [mentorId], references: [id])
+  mentorId        String
+  bookedBy        User          @relation("BookedBy", fields: [bookedById], references: [id])
+  bookedById      String
+
+  recording       SessionRecording?
+  attendances     SessionAttendance[]
+
+  @@index([mentorId])
+  @@index([scheduledAt])
+}
+
+enum SessionType {
+  ONE_ON_ONE
+  GROUP
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model GroupSession {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?       @db.Text
+  topic           String
+  scheduledAt     DateTime
+  duration        Int           @default(60)
+  maxAttendees    Int           @default(50)
+  status          SessionStatus @default(SCHEDULED)
+  meetingLink     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  team            Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId          String
+  mentor          Mentor        @relation(fields: [mentorId], references: [id])
+  mentorId        String
+
+  attendances     SessionAttendance[]
+  recording       SessionRecording?
+
+  @@index([teamId])
+  @@index([scheduledAt])
+}
+
+model SessionAttendance {
+  id              String   @id @default(cuid())
+  joinedAt        DateTime?
+  leftAt          DateTime?
+  attended        Boolean  @default(false)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  sessionBooking  SessionBooking?  @relation(fields: [sessionBookingId], references: [id], onDelete: Cascade)
+  sessionBookingId String?
+  groupSession    GroupSession?    @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
+  groupSessionId  String?
+
+  @@unique([userId, sessionBookingId])
+  @@unique([userId, groupSessionId])
+}
+
+model SessionRecording {
+  id              String   @id @default(cuid())
+  url             String
+  duration        Int
+  fileSize        Int?
+  transcript      String?  @db.Text
+  summaryAI       String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  sessionBooking  SessionBooking? @relation(fields: [sessionBookingId], references: [id], onDelete: Cascade)
+  sessionBookingId String?        @unique
+  groupSession    GroupSession?   @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
+  groupSessionId  String?         @unique
+}
+
+// ==================== AMA / ASYNC CHAT ====================
+
+model AMAThread {
+  id           String      @id @default(cuid())
+  title        String
+  topic        String?
+  status       ThreadStatus @default(OPEN)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  mentor       Mentor      @relation(fields: [mentorId], references: [id])
+  mentorId     String
+
+  messages     AMAMessage[]
+
+  @@index([mentorId])
+}
+
+enum ThreadStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+model AMAMessage {
+  id              String        @id @default(cuid())
+  content         String?       @db.Text
+  voiceUrl        String?
+  voiceDuration   Int?
+  transcription   String?       @db.Text
+  isFromMentor    Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+
+  thread          AMAThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId        String
+  author          User          @relation(fields: [authorId], references: [id])
+  authorId        String
+
+  @@index([threadId])
+}
+
+// ==================== LEARNING PATHS ====================
+
+model LearningPath {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?  @db.Text
+  totalWeeks      Int      @default(4)
+  status          PathStatus @default(DRAFT)
+  startDate       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  team            Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  teamId          String?
+
+  weeks           LearningWeek[]
+
+  @@index([userId])
+}
+
+enum PathStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+model LearningWeek {
+  id              String   @id @default(cuid())
+  weekNumber      Int
+  title           String
+  objectives      String[] @default([])
+
+  learningPath    LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  learningPathId  String
+
+  topics          Topic[]
+
+  @@unique([learningPathId, weekNumber])
+}
+
+model Topic {
+  id              String      @id @default(cuid())
+  title           String
+  description     String?     @db.Text
+  type            TopicType
+  resourceUrl     String?
+  durationMinutes Int?
+  order           Int         @default(0)
+  isCompleted     Boolean     @default(false)
+  completedAt     DateTime?
+
+  week            LearningWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  weekId          String
+
+  @@index([weekId])
+}
+
+enum TopicType {
+  VIDEO
+  ARTICLE
+  EXERCISE
+  SESSION
+  ASSIGNMENT
+  QUIZ
+}
+
+// ==================== ANALYTICS & INSIGHTS ====================
+
+model TeamAnalytics {
+  id                    String   @id @default(cuid())
+  date                  DateTime @db.Date
+  totalSessions         Int      @default(0)
+  avgSessionRating      Decimal? @db.Decimal(3, 2)
+  totalLearningHours    Int      @default(0)
+  pathCompletionRate    Decimal? @db.Decimal(5, 2)
+  activeMembers         Int      @default(0)
+
+  team                  Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                String
+
+  @@unique([teamId, date])
+}
+
+model ProgressTracking {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  sessionsCompleted Int     @default(0)
+  topicsCompleted Int      @default(0)
+  learningMinutes Int      @default(0)
+  streak          Int      @default(0)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  @@unique([userId, date])
+}
+
+model CoachingInsight {
+  id              String      @id @default(cuid())
+  type            InsightType
+  title           String
+  content         String      @db.Text
+  actionItems     String[]    @default([])
+  isRead          Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+
+  author          User        @relation("InsightAuthor", fields: [authorId], references: [id])
+  authorId        String
+  recipient       User        @relation("InsightRecipient", fields: [recipientId], references: [id])
+  recipientId     String
+
+  @@index([recipientId])
+}
+
+enum InsightType {
+  PROGRESS_UPDATE
+  SKILL_GAP
+  RECOMMENDATION
+  ACHIEVEMENT
+  FEEDBACK
+}
+
+// ==================== AUTHENTICATION (NextAuth) ====================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== BILLING ====================
+
+model Subscription {
+  id              String   @id @default(cuid())
+  plan            PlanType
+  status          SubStatus @default(ACTIVE)
+  stripeCustomerId String?
+  stripeSubId     String?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId  String       @unique
+}
+
+enum PlanType {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
