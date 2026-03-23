@@ -175,6 +175,11 @@ body {
   filter: brightness(1.1);
 }
 
+/* CTA gradient (for Tailwind button component) */
+.cta-gradient {
+  background: var(--cta-gradient);
+}
+
 /* Highlight box */
 .highlight-box {
   background: var(--highlight-bg);
