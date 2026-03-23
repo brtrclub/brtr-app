@@ -22,7 +22,6 @@ function LoginForm() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [isAdminLogin, setIsAdminLogin] = useState(false)
   const [isSubdomainLogin, setIsSubdomainLogin] = useState(false)
 
   useEffect(() => {
@@ -161,7 +160,7 @@ function LoginForm() {
     )
   }
 
-  // Main login page (brtr.club/login)
+  // Main login page (app.brtr.club/login) - Simple login for any company user
   return (
     <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -179,52 +178,7 @@ function LoginForm() {
 
         <Card>
           <CardContent className="p-6">
-            {/* Tab Toggle */}
-            <div className="flex rounded-lg bg-[var(--bg-elevated)] p-1 mb-6">
-              <button
-                onClick={() => setIsAdminLogin(false)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                  !isAdminLogin
-                    ? "bg-[var(--bg-white)] text-[var(--text-1)] shadow-sm"
-                    : "text-[var(--text-3)] hover:text-[var(--text-2)]"
-                }`}
-              >
-                Company Login
-              </button>
-              <button
-                onClick={() => setIsAdminLogin(true)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isAdminLogin
-                    ? "bg-[var(--bg-white)] text-[var(--text-1)] shadow-sm"
-                    : "text-[var(--text-3)] hover:text-[var(--text-2)]"
-                }`}
-              >
-                Admin Login
-              </button>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isAdminLogin && (
-                <div>
-                  <Label>Select Company</Label>
-                  <select
-                    className="w-full h-10 px-3 rounded-lg border border-[var(--border-1)] bg-[var(--bg-white)] text-[var(--text-1)] mt-1"
-                    value={selectedCompany?.id || ""}
-                    onChange={(e) => {
-                      const company = companies.find((c) => c.id === e.target.value)
-                      setSelectedCompany(company || null)
-                    }}
-                  >
-                    <option value="">Choose a company...</option>
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div>
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -234,6 +188,7 @@ function LoginForm() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="mt-1"
+                  autoFocus
                 />
               </div>
 
@@ -255,20 +210,14 @@ function LoginForm() {
                 </p>
               )}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || (!isAdminLogin && !selectedCompany)}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
-            {isAdminLogin && (
-              <p className="text-xs text-[var(--text-4)] text-center mt-4">
-                Admin access for brtr.club platform owners
-              </p>
-            )}
+            <p className="text-xs text-[var(--text-4)] text-center mt-4">
+              Contact your company admin if you need access
+            </p>
           </CardContent>
         </Card>
       </div>

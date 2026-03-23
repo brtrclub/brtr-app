@@ -27,11 +27,19 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
+  // Allow the login page to render without auth
+  const isLoginPage = pathname === "/admin/login"
+
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "super_admin")) {
-      router.push("/login")
+    if (!isLoading && !isLoginPage && (!user || user.role !== "super_admin")) {
+      router.push("/admin/login")
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, isLoginPage])
+
+  // Show login page without the admin layout
+  if (isLoginPage) {
+    return <>{children}</>
+  }
 
   if (isLoading) {
     return (
@@ -100,7 +108,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => {
                 logout()
-                router.push("/login")
+                router.push("/admin/login")
               }}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--text-3)] hover:bg-[var(--bg-white)] hover:text-red-500 transition-colors"
             >
